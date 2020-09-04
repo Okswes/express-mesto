@@ -4,21 +4,20 @@ const getAllUsers = (req, res) => User.find({})
   .then((user) => res.send({ data: user }))
   .catch((err) => res.status(500).send({ message: err.message }));
 
-const getUser = (req, res) => User.findOne({ id: req.params._id })
-  .then((user) => {
-    if (user) {
-      return res
-        .status(200)
-        .send(user);
-    }
-    return res
-      .status(404)
-      .send({ message: 'Нет пользователя с таким id' });
-  })
-  .catch((err) => {
-    if (err.name === 'DocumentNotFoundError') return res.status(404).send({ message: err.message });
-    return res.status(500).send({ message: 'Произошла ошибка' });
-  });
+const getUser = (req, res) => {
+  User.findById(req.params.id)
+    .orFail(new Error('NotValidId'))
+    .then((user) => {
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
+        res.status(404).send({ message: 'Нет такого пользователя' });
+      } else {
+        res.status(500).send({ message: 'Произошла ошибка' });
+      }
+    });
+};
 
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
